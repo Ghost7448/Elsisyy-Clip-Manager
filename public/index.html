@@ -4,72 +4,91 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#101014">
+  <meta name="description" content="Secure Kick-connected workspace for Elsisyy Clip Manager.">
   <title>Elsisyy Clip Manager</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar" id="sidebar">
-      <a class="brand" href="#"><span class="brand-mark">E</span><span>ELSISYY<span class="brand-light">CLIPS</span></span></a>
+      <a class="brand" href="/"><span class="brand-mark">E</span><span>ELSISYY<span class="brand-light">CLIPS</span></span></a>
       <div class="side-label">WORKSPACE</div>
-      <button class="nav-item active"><span>▦</span> Overview</button>
-      <button class="nav-item"><span>▣</span> Clips <span class="nav-count">128</span></button>
-      <button class="nav-item"><span>♙</span> Team access</button>
-      <button class="nav-item"><span>⚙</span> Settings</button>
+      <a class="nav-item active" href="#overview"><span>▦</span> Overview</a>
+      <a class="nav-item" href="#clips"><span>▣</span> Clips</a>
+      <a class="nav-item" href="#connection"><span>⌁</span> Kick connection</a>
       <div class="sidebar-bottom">
-        <div class="help-card"><div class="help-icon">?</div><strong>Need a hand?</strong><p>Manage your channel clips from one place.</p><a href="https://help.kick.com/" target="_blank" rel="noreferrer">Kick Help Center ↗</a></div>
-        <div class="profile-mini"><div class="avatar">K</div><div><strong>Demo account</strong><small>Workspace owner</small></div><span class="dots">•••</span></div>
+        <div class="help-card">
+          <div class="help-icon">?</div>
+          <strong>Secure connection</strong>
+          <p>Connect through Kick OAuth. Elsisyy never asks for your Kick password.</p>
+          <a href="https://docs.kick.com/" target="_blank" rel="noreferrer">Kick developer docs ↗</a>
+        </div>
+        <div class="profile-mini">
+          <div class="avatar" id="sideAvatar">?</div>
+          <div><strong id="sideName">Not connected</strong><small id="sideStatus">Connect a Kick account</small></div>
+        </div>
       </div>
     </aside>
 
-    <main class="main">
+    <main class="main" id="overview">
       <header class="topbar">
         <button class="mobile-menu" id="mobileMenu" aria-label="Toggle menu">☰</button>
         <div class="breadcrumb">Workspace <span>/</span> <strong>Overview</strong></div>
-        <div class="top-actions"><span class="demo-pill"><i></i> DEMO MODE</span><button class="icon-btn" title="Notifications">♧</button><div class="avatar small">K</div></div>
+        <div class="top-actions"><span class="status-pill" id="statusPill"><i></i> CHECKING</span><div class="avatar small" id="topAvatar">?</div></div>
       </header>
 
       <section class="content">
         <div class="welcome-row">
-          <div><div class="eyebrow">STREAMER WORKSPACE</div><h1>Clip management<span class="accent">.</span></h1><p class="subheading">Review, organize and manage your channel clips.</p></div>
-          <button class="primary-btn" id="connectBtn"><span>＋</span> Connect Kick channel</button>
+          <div><div class="eyebrow">STREAMER WORKSPACE</div><h1>Clip management<span class="accent">.</span></h1><p class="subheading">A secure workspace for your Kick channel.</p></div>
+          <a class="primary-btn" id="connectBtn" href="/auth/kick"><span>＋</span> Connect with Kick</a>
         </div>
 
-        <div class="notice"><span class="notice-icon">ⓘ</span><div><strong>Preview environment</strong><p>This dashboard currently uses sample clips. No Kick account is connected and no real clips can be deleted yet.</p></div><button class="notice-close" id="closeNotice">×</button></div>
+        <div class="notice" id="notice" hidden>
+          <span class="notice-icon">ⓘ</span><div><strong id="noticeTitle">Connection status</strong><p id="noticeText"></p></div>
+          <button class="notice-close" id="closeNotice" aria-label="Dismiss">×</button>
+        </div>
 
         <div class="stats-grid">
-          <article class="stat-card"><div class="stat-top"><span>Total clips</span><span class="stat-icon">▣</span></div><strong id="totalStat">128</strong><small>In this demo workspace</small></article>
-          <article class="stat-card"><div class="stat-top"><span>Selected</span><span class="stat-icon purple">✓</span></div><strong id="selectedStat">0</strong><small>Ready for review</small></article>
-          <article class="stat-card"><div class="stat-top"><span>Spam matches</span><span class="stat-icon orange">⌕</span></div><strong id="spamStat">100</strong><small>Title contains “Spam elsisyy”</small></article>
-          <article class="stat-card"><div class="stat-top"><span>Team members</span><span class="stat-icon blue">♙</span></div><strong>3</strong><small>With workspace access</small></article>
+          <article class="stat-card"><div class="stat-top"><span>Kick account</span><span class="stat-icon">◉</span></div><strong id="accountStat">—</strong><small id="accountHint">Not connected</small></article>
+          <article class="stat-card"><div class="stat-top"><span>OAuth status</span><span class="stat-icon purple">✓</span></div><strong id="oauthStat">Waiting</strong><small>Official Kick authorization</small></article>
+          <article class="stat-card"><div class="stat-top"><span>Clip API</span><span class="stat-icon orange">!</span></div><strong id="clipsStat">Unavailable</strong><small>Not exposed in public API docs</small></article>
+          <article class="stat-card"><div class="stat-top"><span>Workspace</span><span class="stat-icon blue">⌂</span></div><strong>Elsisyy</strong><small>Secure connection foundation</small></article>
         </div>
 
-        <section class="panel clips-panel">
-          <div class="panel-heading"><div><div class="eyebrow">LIBRARY</div><h2>Your clips</h2><p>Search and select clips you want to manage.</p></div><button class="outline-btn" id="refreshBtn">↻ Refresh</button></div>
-          <div class="toolbar">
-            <label class="search-box"><span>⌕</span><input id="searchInput" type="search" placeholder="Search clip titles..."></label>
-            <select id="filterSelect" aria-label="Filter clips"><option value="all">All clips</option><option value="spam">Spam matches</option><option value="other">Other clips</option></select>
-            <div class="toolbar-spacer"></div><button class="text-btn" id="clearBtn">Clear selection</button><button class="select-btn" id="selectAllBtn">□ Select all</button>
+        <section class="panel connection-panel" id="connection">
+          <div class="panel-heading"><div><div class="eyebrow">ACCOUNT CONNECTION</div><h2 id="connectionTitle">Connect your Kick account</h2><p id="connectionDescription">Authorize Elsisyy using Kick's official OAuth screen.</p></div><span class="connection-indicator" id="connectionIndicator">NOT CONNECTED</span></div>
+          <div class="account-card" id="accountCard" hidden>
+            <img id="profilePicture" class="profile-picture" alt="" hidden>
+            <div class="avatar profile-fallback" id="profileFallback">K</div>
+            <div class="account-details"><strong id="profileName">Kick user</strong><small id="profileId"></small><small id="profileScopes"></small></div>
+            <button class="outline-btn" id="disconnectBtn">Disconnect</button>
           </div>
-          <div class="selection-bar"><span><strong id="selectionCount">0</strong> clips selected</span><button class="delete-btn" id="deleteBtn" disabled>⌫ Delete selected <span id="deleteCount"></span></button></div>
-          <div class="clip-list" id="clipList"></div>
-          <div class="list-footer"><span id="resultsText">Showing 8 of 128 clips</span><button class="load-more" id="loadMoreBtn">Load more ↓</button></div>
+          <div class="connect-explainer" id="connectExplainer">
+            <div class="shield">⌑</div>
+            <div><strong>Sign in securely with Kick</strong><p>You'll be redirected to Kick to review and approve the requested permissions. Your password is entered only on Kick.</p></div>
+          </div>
+          <div class="panel-actions" id="connectActions"><a class="primary-btn" href="/auth/kick" id="connectActionBtn">Connect with Kick <span>↗</span></a></div>
         </section>
 
-        <footer>ELSISYY CLIP MANAGER <span>•</span> EARLY PREVIEW <span class="footer-right">Built for Kick creators</span></footer>
+        <section class="panel clips-panel" id="clips">
+          <div class="panel-heading"><div><div class="eyebrow">CLIP LIBRARY</div><h2>Your channel clips</h2><p>Real clip management will appear here when a supported Kick integration is available.</p></div><span class="connection-indicator warning">NOT ENABLED</span></div>
+          <div class="blocked-state">
+            <div class="blocked-icon">▣</div>
+            <div><strong>Clip listing and deletion are not connected</strong><p>The documented Kick Public API currently does not list a Clips endpoint. Elsisyy will not show sample clips or pretend that a delete action succeeded.</p></div>
+          </div>
+          <div class="capability-list">
+            <div><span class="cap-dot done"></span><span>Kick OAuth connection foundation</span><b>READY</b></div>
+            <div><span class="cap-dot done"></span><span>Connected account profile</span><b>READY</b></div>
+            <div><span class="cap-dot pending"></span><span>Load native Kick Clips</span><b>WAITING</b></div>
+            <div><span class="cap-dot pending"></span><span>Delete selected native Clips</span><b>WAITING</b></div>
+          </div>
+        </section>
+
+        <footer>ELSISYY CLIP MANAGER <span>•</span> KICK OAUTH WORKSPACE <span class="footer-right">No fake clip data</span></footer>
       </section>
     </main>
   </div>
-
-  <dialog id="confirmDialog" class="confirm-dialog">
-    <div class="dialog-icon">!</div><h2>Delete selected clips?</h2><p id="confirmText">You are about to remove selected demo items.</p>
-    <div class="dialog-actions"><button class="outline-btn" id="cancelDelete">Cancel</button><button class="delete-btn" id="confirmDelete">Confirm demo action</button></div>
-    <small>This only changes the sample data shown in this browser. It does not delete anything on Kick.</small>
-  </dialog>
   <div class="toast" id="toast" role="status"></div>
-  <script src="/app.js"></script>
+  <script src="/app.js" defer></script>
 </body>
 </html>

@@ -1,109 +1,132 @@
-const initialClips = Array.from({ length: 128 }, (_, index) => ({
-  id: index + 1,
-  title: index < 100 ? "Spam elsisyy" : ["Best Stream Moments", "Funny Stream Highlight", "Ranked Match Win", "Community Moments"][index % 4],
-  date: new Date(Date.now() - index * 3600000).toLocaleDateString(),
-  duration: ["00:24", "00:38", "01:12", "00:51"][index % 4]
-}));
-
-let clips = [...initialClips];
-let selected = new Set();
-let visibleCount = 8;
-
 const $ = (id) => document.getElementById(id);
-const clipList = $("clipList");
-const searchInput = $("searchInput");
-const filterSelect = $("filterSelect");
 
-function filteredClips() {
-  const query = searchInput.value.trim().toLowerCase();
-  return clips.filter((clip) => {
-    const matchesQuery = clip.title.toLowerCase().includes(query);
-    const isSpam = clip.title.toLowerCase().includes("spam elsisyy");
-    const matchesFilter = filterSelect.value === "all" || (filterSelect.value === "spam" && isSpam) || (filterSelect.value === "other" && !isSpam);
-    return matchesQuery && matchesFilter;
-  });
+function showNotice(title, message) {
+  $("noticeTitle").textContent = title;
+  $("noticeText").textContent = message;
+  $("notice").hidden = false;
 }
 
-function render() {
-  const filtered = filteredClips();
-  const shown = filtered.slice(0, visibleCount);
-  clipList.innerHTML = "";
+function showToast(message) {
+  const toast = $("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(() => toast.classList.remove("show"), 2800);
+}
 
-  if (!shown.length) {
-    clipList.innerHTML = '<div class="empty-state">No clips match your search.</div>';
+function initials(name) {
+  return (name || "?").trim().slice(0, 1).toUpperCase() || "?";
+}
+
+function setConnected(profile, scopes = "") {
+  const name = profile.username || "Kick user";
+  const letter = initials(name);
+  $("statusPill").innerHTML = "<i></i> CONNECTED";
+  $("statusPill").classList.add("connected");
+  $("connectBtn").hidden = true;
+  $("connectActions").hidden = true;
+  $("accountStat").textContent = name;
+  $("accountHint").textContent = "Kick account connected";
+  $("oauthStat").textContent = "Connected";
+  $("sideName").textContent = name;
+  $("sideStatus").textContent = "Kick account connected";
+  $("sideAvatar").textContent = letter;
+  $("topAvatar").textContent = letter;
+  $("connectionTitle").textContent = "Kick account connected";
+  $("connectionDescription").textContent = "Your account is authorized with Elsisyy.";
+  $("connectionIndicator").textContent = "CONNECTED";
+  $("connectionIndicator").classList.add("connected");
+  $("connectExplainer").hidden = true;
+  $("accountCard").hidden = false;
+  $("profileName").textContent = name;
+  $("profileId").textContent = profile.id ? "Kick user ID: " + profile.id : "Connected Kick account";
+  $("profileScopes").textContent = scopes ? "Granted scopes: " + scopes : "Granted scopes are managed by Kick";
+  $("profileFallback").textContent = letter;
+
+  const picture = $("profilePicture");
+  if (profile.profilePicture) {
+    picture.src = profile.profilePicture;
+    picture.hidden = false;
+    $("profileFallback").hidden = true;
   } else {
-    for (const clip of shown) {
-      const isSelected = selected.has(clip.id);
-      const spam = clip.title.toLowerCase().includes("spam elsisyy");
-      const row = document.createElement("label");
-      row.className = `clip-row ${isSelected ? "selected" : ""}`;
-      row.innerHTML = `
-        <input type="checkbox" data-id="${clip.id}" ${isSelected ? "checked" : ""} aria-label="Select ${escapeHtml(clip.title)}">
-        <div class="clip-thumb">▶</div>
-        <div class="clip-info"><div class="clip-title"></div><div class="clip-meta">Clip #${clip.id} · ${clip.date} · ${clip.duration}</div></div>
-        <span class="clip-tag ${spam ? "" : "other"}">${spam ? "SPAM MATCH" : "CLIP"}</span>`;
-      row.querySelector(".clip-title").textContent = clip.title;
-      row.querySelector("input").addEventListener("change", (event) => {
-        event.target.checked ? selected.add(clip.id) : selected.delete(clip.id);
-        render();
-      });
-      clipList.appendChild(row);
-    }
+    picture.hidden = true;
+    $("profileFallback").hidden = false;
   }
-
-  $("totalStat").textContent = clips.length;
-  $("selectedStat").textContent = selected.size;
-  $("spamStat").textContent = clips.filter(c => c.title.toLowerCase().includes("spam elsisyy")).length;
-  $("selectionCount").textContent = selected.size;
-  $("deleteCount").textContent = selected.size ? `(${selected.size})` : "";
-  $("deleteBtn").disabled = selected.size === 0;
-  $("resultsText").textContent = `Showing ${shown.length} of ${filtered.length} matching clips`;
-  const allFilteredSelected = filtered.length > 0 && filtered.every(c => selected.has(c.id));
-  $("selectAllBtn").textContent = allFilteredSelected ? "☑ Deselect all" : "□ Select all";
-  $("loadMoreBtn").style.display = filtered.length > visibleCount ? "inline-block" : "none";
 }
 
-function escapeHtml(value) {
-  return value.replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+function setDisconnected() {
+  $("statusPill").innerHTML = "<i></i> NOT CONNECTED";
+  $("statusPill").classList.remove("connected");
+  $("connectBtn").hidden = false;
+  $("connectActions").hidden = false;
+  $("accountStat").textContent = "—";
+  $("accountHint").textContent = "Not connected";
+  $("oauthStat").textContent = "Waiting";
+  $("sideName").textContent = "Not connected";
+  $("sideStatus").textContent = "Connect a Kick account";
+  $("sideAvatar").textContent = "?";
+  $("topAvatar").textContent = "?";
+  $("connectionTitle").textContent = "Connect your Kick account";
+  $("connectionDescription").textContent = "Authorize Elsisyy using Kick's official OAuth screen.";
+  $("connectionIndicator").textContent = "NOT CONNECTED";
+  $("connectionIndicator").classList.remove("connected");
+  $("connectExplainer").hidden = false;
+  $("accountCard").hidden = true;
 }
 
-function toast(message) {
-  const node = $("toast");
-  node.textContent = message;
-  node.classList.add("show");
-  clearTimeout(toast.timer);
-  toast.timer = setTimeout(() => node.classList.remove("show"), 2600);
+async function loadAccount() {
+  try {
+    const response = await fetch("/api/me", { credentials: "same-origin" });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Could not load account.");
+    if (data.connected && data.profile) {
+      setConnected(data.profile, data.scopes);
+    } else {
+      setDisconnected();
+      if (data.reconnectRequired) showNotice("Reconnect required", "Your Kick session expired. Connect your account again.");
+      if (!data.oauthConfigured) {
+        $("connectBtn").classList.add("disabled");
+        $("connectBtn").removeAttribute("href");
+        $("connectActionBtn").classList.add("disabled");
+        $("connectActionBtn").removeAttribute("href");
+        showNotice("Setup required", "The owner must add the Kick app credentials and SESSION_SECRET to the hosting environment before OAuth can start.");
+      }
+    }
+  } catch (error) {
+    setDisconnected();
+    showNotice("Connection check failed", error.message);
+  }
 }
 
-$("selectAllBtn").addEventListener("click", () => {
-  const allFiltered = filteredClips();
-  const allFilteredSelected = allFiltered.length > 0 && allFiltered.every(c => selected.has(c.id));
-  allFiltered.forEach(c => allFilteredSelected ? selected.delete(c.id) : selected.add(c.id));
-  render();
-});
-
-$("clearBtn").addEventListener("click", () => { selected.clear(); render(); });
-searchInput.addEventListener("input", () => { visibleCount = 8; render(); });
-filterSelect.addEventListener("change", () => { visibleCount = 8; render(); });
-$("loadMoreBtn").addEventListener("click", () => { visibleCount += 8; render(); });
-$("refreshBtn").addEventListener("click", () => { toast("Demo data refreshed."); });
-$("connectBtn").addEventListener("click", () => toast("Kick OAuth integration is not configured yet."));
-$("closeNotice").addEventListener("click", () => document.querySelector(".notice").remove());
 $("mobileMenu").addEventListener("click", () => $("sidebar").classList.toggle("open"));
+$("closeNotice").addEventListener("click", () => { $("notice").hidden = true; });
 
-$("deleteBtn").addEventListener("click", () => {
-  if (!selected.size) return;
-  $("confirmText").textContent = `You selected ${selected.size} sample clips. This action only removes them from this demo page.`;
-  $("confirmDialog").showModal();
-});
-$("cancelDelete").addEventListener("click", () => $("confirmDialog").close());
-$("confirmDelete").addEventListener("click", () => {
-  const count = selected.size;
-  clips = clips.filter(clip => !selected.has(clip.id));
-  selected.clear();
-  $("confirmDialog").close();
-  render();
-  toast(`${count} demo clips removed from this preview.`);
+$("disconnectBtn").addEventListener("click", async () => {
+  $("disconnectBtn").disabled = true;
+  try {
+    const response = await fetch("/auth/logout", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: "{}"
+    });
+    if (!response.ok) throw new Error("Disconnect failed.");
+    setDisconnected();
+    showToast("Kick account disconnected.");
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    $("disconnectBtn").disabled = false;
+  }
 });
 
-render();
+const params = new URLSearchParams(window.location.search);
+if (params.get("connected") === "1") showNotice("Kick connected", "Your Kick account was connected successfully.");
+if (params.get("notice") === "oauth_not_configured") showNotice("Setup required", "Add your Kick OAuth credentials to the hosting environment first.");
+if (params.get("notice") === "kick_denied") showNotice("Authorization cancelled", "Kick access was not approved. You can connect whenever you're ready.");
+if (params.get("notice") === "kick_connection_failed") showNotice("Connection failed", "Kick could not complete the connection. Check the app settings and redirect URL, then try again.");
+if (params.has("connected") || params.has("notice")) {
+  window.history.replaceState({}, document.title, "/");
+}
+
+loadAccount();
