@@ -58,7 +58,8 @@ function render() {
   $("deleteCount").textContent = selected.size ? `(${selected.size})` : "";
   $("deleteBtn").disabled = selected.size === 0;
   $("resultsText").textContent = `Showing ${shown.length} of ${filtered.length} matching clips`;
-  $("selectAllBtn").textContent = shown.length && shown.every(c => selected.has(c.id)) ? "☑ Deselect shown" : "□ Select all shown";
+  const allFilteredSelected = filtered.length > 0 && filtered.every(c => selected.has(c.id));
+  $("selectAllBtn").textContent = allFilteredSelected ? "☑ Deselect all" : "□ Select all";
   $("loadMoreBtn").style.display = filtered.length > visibleCount ? "inline-block" : "none";
 }
 
@@ -75,9 +76,9 @@ function toast(message) {
 }
 
 $("selectAllBtn").addEventListener("click", () => {
-  const shown = filteredClips().slice(0, visibleCount);
-  const allShownSelected = shown.length && shown.every(c => selected.has(c.id));
-  shown.forEach(c => allShownSelected ? selected.delete(c.id) : selected.add(c.id));
+  const allFiltered = filteredClips();
+  const allFilteredSelected = allFiltered.length > 0 && allFiltered.every(c => selected.has(c.id));
+  allFiltered.forEach(c => allFilteredSelected ? selected.delete(c.id) : selected.add(c.id));
   render();
 });
 
